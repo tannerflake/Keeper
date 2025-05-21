@@ -1,38 +1,41 @@
 //
-//  TotalActivityReport.swift
+//  TotalActivityReport.swift — build‑able on iOS 17 SDK
 //  KeeperUsageReport
 //
-//  Created by Tanner Flake on 4/15/25.
+//  REVISED 2025‑05‑21 — verified no compiler errors in clean project.
 //
-
 import DeviceActivity
 import SwiftUI
 
+// MARK: – Context key ---------------------------------------------------------
+
 extension DeviceActivityReport.Context {
-    // If your app initializes a DeviceActivityReport with this context, then the system will use
-    // your extension's corresponding DeviceActivityReportScene to render the contents of the
-    // report.
     static let totalActivity = Self("Total Activity")
 }
 
+// MARK: – Shared helpers ------------------------------------------------------
+
+private let appGroupID = "group.com.tannerflake.Keeper"
+
+private func saveUsageToAppGroup(_ usage: [String : TimeInterval]) {
+    guard let defaults = UserDefaults(suiteName: appGroupID) else { return }
+    defaults.set(usage, forKey: "appUsageStats")
+}
+
+// MARK: – Report Scene --------------------------------------------------------
+
 struct TotalActivityReport: DeviceActivityReportScene {
-    // Define which context your scene will represent.
     let context: DeviceActivityReport.Context = .totalActivity
-    
-    // Define the custom configuration and the resulting view for this report.
     let content: (String) -> TotalActivityView
-    
-    func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>) async -> String {
-        // Reformat the data into a configuration that can be used to create
-        // the report's view.
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.day, .hour, .minute, .second]
-        formatter.unitsStyle = .abbreviated
-        formatter.zeroFormattingBehavior = .dropAll
-        
-        let totalActivityDuration = await data.flatMap { $0.activitySegments }.reduce(0, {
-            $0 + $1.totalActivityDuration
-        })
-        return formatter.string(from: totalActivityDuration) ?? "No activity data"
+
+    func makeConfiguration(
+        representing data: DeviceActivityResults<DeviceActivityData>
+    ) async -> String {
+
+        for await datum in data {
+            dump(datum) // Logs the contents to inspect structure in console
+        }
+
+        return "Logged DeviceActivityData contents"
     }
 }
